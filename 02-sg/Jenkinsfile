@@ -56,12 +56,12 @@ pipeline{
                 }
                 stage("RDS"){    
                     steps{
-                        build job: '04-rds', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
+                        build job: '04-rds', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: true // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
                     }
                 }
                 stage("EKS"){    
                     steps{
-                        build job: '05-eks', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
+                        build job: '05-eks', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: true // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
                     }
                 }
                 stage("ACM"){    
@@ -85,12 +85,12 @@ pipeline{
             stages{
                 stage("Application Load Balancer"){    
                     steps{
-                        build job: '07-web-alb', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false
+                        build job: '07-web-alb', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']]
                     }
                 }
                 stage("CDN"){    
                     steps{
-                        build job: '09-cdn', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false 
+                        build job: '09-cdn', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']]
                     }
                 }
             }
