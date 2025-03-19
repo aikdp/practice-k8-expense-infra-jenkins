@@ -43,7 +43,7 @@ pipeline{
         }
         stage("Trigger Security Group"){    
             when {
-                expression ${params.ACTION} == 'apply'
+                expression {params.ACTION == 'apply'}
             }
             steps{
                 build job: '02-sg', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
