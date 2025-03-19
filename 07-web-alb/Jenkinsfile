@@ -11,7 +11,7 @@ pipeline{
     stages{
         stage("Terraform Init and Plan"){
             when {
-                    expression ${params.ACTION} == 'apply'
+                    expression {params.ACTION == 'apply'}
             }
             steps{
                 withAWS(region: 'us-east-1', credentials: 'aws-creds'){
@@ -30,13 +30,14 @@ pipeline{
                 withAWS(region: 'us-east-1', credentials: 'aws-creds'){
                     sh """
                         cd 07-web-alb
-                        
-                        if ${params.ACTION} == apply
-                        then
-                            terraform apply -auto-approve tfplan
-                        elif ${params.ACTION} == destroy
-                        then
-                            terraform destroy -auto-approve
+
+                        if [ ${params.ACTION} == 'apply' ]
+                            then
+                                terraform apply -auto-approve tfplan
+                        elif [ ${params.ACTION} == 'destroy' ]
+                            then
+                                terraform destroy -auto-approve
+                        fi
                     """
                 }
             }
