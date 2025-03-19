@@ -31,12 +31,13 @@ pipeline{
                     sh """
                         cd 06-acm
                         
-                        if ${params.ACTION} == apply
-                        then
-                            terraform apply -auto-approve tfplan
-                        elif ${params.ACTION} == destroy
-                        then
-                            terraform destroy -auto-approve
+                        if [ ${params.ACTION} == 'apply' ]
+                            then
+                                terraform apply -auto-approve tfplan
+                        elif [ ${params.ACTION} == 'destroy' ]
+                            then
+                                terraform destroy -auto-approve
+                        fi
                     """
                 }
             }
