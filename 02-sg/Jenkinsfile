@@ -1,0 +1,114 @@
+pipeline{
+    agent any
+    options{
+        disableConcurrentBuilds() 
+        // retry(2)    //it will retry 2 times, if pipeline failure
+        timeout(time: 30, unit: 'MINUTES') //pipeline will stop/abort when specified time period
+    }
+    parameters {
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Run on specific action')
+    }
+    stages{
+        stage("Terraform Init and Plan of SG"){
+            // when {
+            //         expression ${params.ACTION} == 'apply'
+            // }
+            steps{
+                withAWS(region: 'us-east-1', credentials: 'aws-creds'){
+                    sh '''
+                        cd 02-sg
+
+                        terraform init -reconfigure
+
+                        terraform plan -out=tfplan
+                    '''
+                }
+            }
+        }
+        stage("Terraform Apply and Destroy of SG"){
+            steps{
+                withAWS(region: 'us-east-1', credentials: 'aws-creds'){
+                    sh """
+                        cd 02-sg
+
+                        if ${params.ACTION} == apply
+                        then
+                            terraform apply -auto-approve tfplan
+                        elif ${params.ACTION} == destroy
+                        then
+                            terraform destroy -auto-approve
+                    """
+                }
+            }
+        }
+        // Parallel stages
+        stage("Parallel Stage"){
+            when {
+                expression ${params.ACTION} == 'apply'
+            }
+            parallel {
+                stage("Bastion"){    
+                    steps{
+                        build job: '03-bastion', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
+                    }
+                }
+                stage("RDS"){    
+                    steps{
+                        build job: '04-rds', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
+                    }
+                }
+                stage("EKS"){    
+                    steps{
+                        build job: '05-eks', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
+                    }
+                }
+                stage("ACM"){    
+                    steps{
+                        build job: '06-acm', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
+                    }
+                }
+                stage("ECR"){    
+                    steps{
+                        build job: '08-ecr', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
+                    }
+                }
+            }
+        }
+
+        //Sequencial Stage
+        stage("Sequencial Stage for ALB and CDN"){
+            when {
+                expression ${params.ACTION} == 'apply'
+            }
+            stages{
+                stage("Application Load Balancer"){    
+                    steps{
+                        build job: '07-web-alb', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false
+                    }
+                }
+                stage("CDN"){    
+                    steps{
+                        build job: '09-cdn', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false 
+                    }
+                }
+            }
+        }
+    }
+    //post build section
+    post{
+        always{
+            echo "I always run when pipeline running"
+            deleteDir()    //Cleans up workspace after every build.
+        }
+        failure{
+            echo "Pipeline is FAILED"
+        }
+        success {
+            echo "Pipeline is Success"
+        }
+        regression {
+            echo "It will execute if Pipeline status is failure, unstable, or aborted and the previous run was successful"
+        }
+    }
+}
+

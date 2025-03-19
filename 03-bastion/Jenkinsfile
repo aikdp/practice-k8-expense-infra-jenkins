@@ -10,26 +10,26 @@ pipeline{
     }
     stages{
         stage("Terraform Init and Plan"){
+            // when {
+            //     expression ${params.ACTION} == 'apply'
+            // }
             steps{
-                // when {
-                //     expression ${params.ACTION} == 'apply'
-                // }
                 withAWS(region: 'us-east-1', credentials: 'aws-creds'){
-                    sh '''
-                        cd 01-vpc
+                  sh """
+                    cd 03-bastion
 
-                        terraform init -reconfigure
-
-                        terraform plan -out=tfplan
-                    '''
+                    terraform init -reconfigure
+                    
+                    terraform plan -out=tfplan
+                  """
                 }
             }          
         }
         stage("Terraform Apply and Destroy"){
             steps{
                 withAWS(region: 'us-east-1', credentials: 'aws-creds'){
-                    sh '''
-                        cd 01-vpc
+                    sh """
+                        cd 03-bastion
 
                         if ${params.ACTION} == apply
                         then
@@ -37,21 +37,13 @@ pipeline{
                         elif ${params.ACTION} == destroy
                         then
                             terraform destroy -auto-approve
-                    '''
+                    """
                 }
-            }
-        }
-        stage("Trigger Security Group"){    
-            when {
-                    expression ${params.ACTION} == 'apply'
-            }
-            steps{
-                build job: '02-sg', parameters: [[$class: 'StringParameterValue', name: 'ACTION', value: 'apply']], wait: false // false means, VPC is succesfull, even if SG fails. TRUE, if SG fails then VPC also failed
             }
         }
     }
     //post build section
-    post{
+    post {
         always{
             echo "I always run when pipeline running"
             deleteDir()    //Cleans up workspace after every build.
@@ -65,6 +57,6 @@ pipeline{
         regression {
             echo "It will execute if Pipeline status is failure, unstable, or aborted and the previous run was successful"
         }
-    }
+    }        
 }
 
