@@ -79,7 +79,7 @@ pipeline{
         // Sequencial Stage
         stage ("Sequence Stage for ACM, SG and VPC destroy"){
             when {
-                expression ${params.ACTION} == 'destroy'
+                expression {params.ACTION == 'destroy'}
             }
             stages {
                 stage("ACM"){    

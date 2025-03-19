@@ -4,15 +4,16 @@ pipeline{
         disableConcurrentBuilds() 
         // retry(2)    //it will retry 2 times, if pipeline failure
         timeout(time: 30, unit: 'MINUTES') //pipeline will stop/abort when specified time period
+        ansiColor('xterm')
     }
     parameters {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Run on specific action')
     }
     stages{
         stage("Terraform Init and Plan"){
-            when {
-                    expression {params.ACTION == 'apply'}
-            }
+            // when {
+            //     expression {params.ACTION == 'apply'}
+            // }
             steps{
                 withAWS(region: 'us-east-1', credentials: 'aws-creds'){
                     sh '''
