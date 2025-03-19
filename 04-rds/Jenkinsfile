@@ -9,9 +9,9 @@ pipeline{
     parameters {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Run on specific action')
     }
-    environment{
-        TF_VAR_db_password = "ExpenseApp1"
-    }
+    // environment{
+    //     TF_VAR_db_password = "ExpenseApp1"
+    // }
     stages{
         stage("Terraform Init and Plan"){
             // when {
@@ -36,11 +36,12 @@ pipeline{
                         cd 04-rds
 
                         if [ ${params.ACTION} == 'apply' ]
-                        then
-                            terraform apply -auto-approve -var-file="mysql.tfvars" tfplan
+                            then
+                                terraform apply -auto-approve tfplan -var-file="mysql.tfvars"
                         elif [ ${params.ACTION} == 'destroy' ]
-                        then
+                            then
                             terraform destroy -auto-approve -var-file="mysql.tfvars"
+                        fi
                     """
                 }
             }
