@@ -4,6 +4,7 @@ pipeline{
         disableConcurrentBuilds() 
         // retry(2)    //it will retry 2 times, if pipeline failure
         timeout(time: 30, unit: 'MINUTES') //pipeline will stop/abort when specified time period
+        ansiColor('xterm')
     }
     parameters {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Run on specific action')
@@ -31,12 +32,13 @@ pipeline{
                     sh """
                         cd 02-sg
 
-                        if ${params.ACTION} == apply
-                        then
-                            terraform apply -auto-approve tfplan
-                        elif ${params.ACTION} == destroy
-                        then
-                            terraform destroy -auto-approve
+                        if [${params.ACTION} == 'apply']
+                            then
+                                terraform apply -auto-approve tfplan
+                        elif [${params.ACTION} == 'destroy']
+                            then
+                                terraform destroy -auto-approve
+                        fi
                     """
                 }
             }
@@ -44,7 +46,7 @@ pipeline{
         // Parallel stages
         stage("Parallel Stage"){
             when {
-                expression ${params.ACTION} == 'apply'
+                expression {params.ACTION == 'apply'}
             }
             parallel {
                 stage("Bastion"){    
@@ -78,7 +80,7 @@ pipeline{
         //Sequencial Stage
         stage("Sequencial Stage for ALB and CDN"){
             when {
-                expression ${params.ACTION} == 'apply'
+                expression {params.ACTION == 'apply'}
             }
             stages{
                 stage("Application Load Balancer"){    
