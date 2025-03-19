@@ -38,6 +38,7 @@ pipeline{
                         then
                             terraform destroy -auto-approve
                     """
+                }
             }
         }
     }
