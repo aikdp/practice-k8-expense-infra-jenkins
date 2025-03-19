@@ -9,6 +9,9 @@ pipeline{
     parameters {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Run on specific action')
     }
+    environment{
+        db_password = "ExpenseApp1"
+    }
     stages{
         stage("Terraform Init and Plan"){
             // when {
