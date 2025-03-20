@@ -122,6 +122,9 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 VALIDATE $? "Installation of HELM"
 
+#Install MYSQL
+sudo dnf install mysql-server -y
+VALIDATE $? "MySQL Installation"
 
 echo "Exit and Login Agian will work Docker commands. Thanks"
 
