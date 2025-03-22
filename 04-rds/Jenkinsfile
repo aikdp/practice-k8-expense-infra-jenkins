@@ -25,7 +25,7 @@ pipeline{
                     sh '''
                         cd 04-rds
 
-                        terraform init -reconfigure
+                        terraform init -upgrade
                         
                         terraform plan -out=tfplan -var-file="mysql.tfvars"
                     '''
